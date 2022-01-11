@@ -54,7 +54,7 @@ def train_test_loop(x_train,N,N_out,g,tau,delta,alpha,totaltime):
         error = np.zeros((N_out, totaltime)) # error signal- z(t)-f(t)
         learning_error = np.zeros((N_out, totaltime)) # change in the learning error over time
         w_out = np.random.randn(N, N_out)/np.sqrt(N) # output weights for the read out unit
-        w_in = np.random.randn(N, N_out) # input weights
+        w_in = np.random.randn(N, 1) # input weights
         f=x_train[i,:].reshape(1,-1)
         # pdb.set_trace()
         error,learning_error,z_out,w_out,x,regP=dynamics(N_out,N,g,tau,delta,f,

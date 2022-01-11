@@ -71,7 +71,6 @@ error,learning_error,z_out,w_out,_,_=dynamics(N_out,N,g,tau,delta,ftest,
 num=0
 
 ##Plotting train signal, test signal and error
-%matplotlib inline
 
 plt.figure()
 ax=plt.subplot(411)
