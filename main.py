@@ -81,7 +81,7 @@ delta = .3 # delta for Euler's method
 alpha=1 # alpha for regularizer
 totaltime=np.size(x_train,1)
 learning_error_matrix=train_test_loop(x_train,N,N_out,g,tau,delta,alpha,totaltime)
-np.save('learningerror_data.npy',learning_error_matrix) # save the learning error
+# np.save('learningerror_data.npy',learning_error_matrix) # save the learning error
 
 #%% load presaved learning error matrix
 

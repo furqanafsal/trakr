@@ -43,6 +43,9 @@ def add_noise(x,sigma):
     return x
 
 #%% train and test loop for trakr
+
+## should work if there's only one output unit
+
 def train_test_loop(x_train,N,N_out,g,tau,delta,alpha,totaltime):
     learning_error_tot=np.zeros((np.size(x_train,0),np.size(x_train,0),totaltime))
     for i in range(np.size(x_train,0)): 
