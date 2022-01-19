@@ -74,6 +74,40 @@ def train_test_loop(x_train,N,N_out,g,tau,delta,alpha,totaltime):
             print(j)
     return learning_error_tot
 
+#%% #%% train and test loop for trakr - when learning chaotic RNN unit trajectories - learning ...
+#%%      multiple units simultaneously - dev project
+
+## should work if there are multiple input/output units
+def train_test_loop_formultiunitactivity(x_train,N,N_out,g,tau,delta,alpha,totaltime):  
+    learning_error_tot=np.zeros((np.size(x_train,0),totaltime,np.size(x_train,2),np.size(x_train,2)))
+    for i in range(np.size(x_train,2)): 
+        regP=alpha*np.identity(N) # regularizer
+        J = g*np.random.randn(N,N)/np.sqrt(N) # connectivity matrix J
+        r = np.zeros((N, totaltime)) # rate matrix - firing rates of neurons
+        x = np.random.randn(N, 1) # activity matrix before activation function applied
+        z_out = np.zeros((N_out,totaltime)) # z(t) for the output read out unit
+        error = np.zeros((N_out, totaltime)) # error signal- z(t)-f(t)
+        learning_error = np.zeros((N_out, totaltime)) # change in the learning error over time
+        w_out = np.random.randn(N, N_out)/np.sqrt(N) # output weights for the read out unit
+        w_in = np.random.randn(N, N_out) # input weights
+        f=x_train[:,:,i]
+        # pdb.set_trace()
+        error,learning_error,z_out,w_out,x,regP=dynamics(N_out,N,g,tau,delta,f,
+                        totaltime,regP,J,r,x,z_out,error,learning_error,w_out,w_in,
+                        freezew=0,t1_train=0,
+                        t2_train=totaltime)
+        print(i)
+        for j in range(np.size(x_train,2)):
+            f=x_train[:,:,j]
+            error,learning_error,z_out,w_out,_,_=dynamics(N_out,N,g,tau,delta,f,
+                        totaltime,regP,J,r,x,z_out,error,learning_error,w_out,w_in,
+                        freezew=1,t1_train=0,
+                        t2_train=totaltime)
+            learning_error_tot[:,:,j,i]=learning_error
+    #         print(j)
+    return learning_error_tot
+
+
 #%% cross validation metrics for trakr ; accuracy and auc
 def cross_val_metrics_trakr(x,y,n_classes):
     skf = StratifiedKFold(n_splits=10)
