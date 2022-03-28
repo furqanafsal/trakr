@@ -6,48 +6,41 @@ Created on Thu Dec  2 16:15:32 2021
 @author: furqanafzal
 """
 #%%modules
-import numpy as np
-import matplotlib.pyplot as plt
-import os 
-os.chdir('/Users/furqanafzal/Documents/furqan/MountSinai/Research/Code/trakr')
+import os
+path='/Users/furqanafzal/Documents/furqan/MountSinai/Research/Code/trakr'
+os.chdir(path)
 import numpy as np
 import matplotlib.pylab as plt
-from IPython import get_ipython
-from sklearn.metrics import mean_squared_error
-from scipy import signal
-import pandas as pd
-from scipy.signal import sosfiltfilt
-from scipy.signal import savgol_filter
-from modules import cross_val_metrics_naiveB
-from sklearn import preprocessing
-from scipy import stats
-from sklearn.svm import LinearSVC
-from sklearn.svm import SVC
-from sklearn.preprocessing import label_binarize
-from sklearn.model_selection import cross_val_score
-from sklearn.model_selection import cross_validate
-from sklearn.model_selection import cross_val_predict
-from sklearn.metrics import roc_curve, auc
-from sklearn import svm, datasets
-from sklearn.model_selection import StratifiedKFold
-from sklearn.metrics import accuracy_score
-from modules import cross_val_metrics
-import pyinform as pyinf
+import modules
+import importlib
+importlib.reload(modules) 
+from modules import add_noise,standardize_data,cross_val_metrics_naiveB
 
+
+#%% load data
 path='/Users/furqanafzal/Documents/furqan/MountSinai/Research/ComputationalNeuro/erin_collab/variabledata'
 os.chdir(path)
 
-#%% load data
 X=np.load('mnist_trakr_X_alldigits.npy')
-X=stats.zscore(X,axis=1)
+X=standardize_data(X)
 y=np.load('mnist_trakr_labels_alldigits.npy')
 
 #%% performance and evaluation - metrics
-accuracy,aucvec=cross_val_metrics_naiveB(X,y,n_classes=10)
+accuracy,aucvec=cross_val_metrics_naiveB(X,y,n_classes=10,splits=10)
 
 
+#%%
+performance_metrics=dict()
+performance_metrics['accuracy']=accuracy
+performance_metrics['auc']=aucvec
 
 
+#%%
+
+import pickle
+
+with open('/Users/furqanafzal/Documents/furqan/MountSinai/Research/ComputationalNeuro/trakr/neurips2022/data_results/metrics_nb_mnist', 'wb') as f:
+    pickle.dump(performance_metrics, f)
 
 
 
