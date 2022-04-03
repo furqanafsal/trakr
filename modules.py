@@ -18,9 +18,10 @@ import tensorflow as tf
 from scipy import stats
 from scipy import signal
 from scipy.signal import sosfiltfilt
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.linear_model import LogisticRegression
+import warnings
 # import _ucrdtw
 
 #%% activity/dynamics loop
@@ -120,7 +121,9 @@ def train_test_loop_formultiunitactivity(x_train,N,N_out,g,tau,delta,alpha,total
 
 #%% cross validation metrics for trakr ; accuracy and auc
 def cross_val_metrics_trakr(x,y,n_classes,splits):
+    warnings.filterwarnings("ignore")
     skf = StratifiedKFold(n_splits=splits,shuffle=True)
+    print('knn')
     accuracy=[]
     aucvec=[]
     fpr = dict()
@@ -155,7 +158,8 @@ def cross_val_metrics_trakr(x,y,n_classes,splits):
 
 #%% cross validation metrics for all other methods ; accuracy and auc
 def cross_val_metrics(x,y,n_classes,splits):
-    print('knn')
+    warnings.filterwarnings("ignore")
+    # print('knn')
     skf = StratifiedKFold(n_splits=splits,shuffle=True)
     accuracy=[]
     aucvec=[]
@@ -228,6 +232,8 @@ def generateMNISTdata():
 
     x_test=X.reshape(1000,784)
     y_test=y.reshape(1000)
+    x_test=standardize_data(x_test)
+    x_test=permutedseqMNIST(x_test)
     return x_test,y_test
 
 
@@ -237,7 +243,7 @@ def generateMNISTdata():
 # Based on the code provided by Fawaz et al related to their 2019 paper.
 # https://link.springer.com/article/10.1007/s10618-019-00619-1
 # https://github.com/hfawaz/dl-4-tsc
-#################################
+################################
 import twiesn
 
 def create_classifier(classifier_name, input_shape, nb_classes, output_directory, verbose=True):
@@ -317,7 +323,16 @@ def band_pass_filt(dataorig,bands):
     data=data.reshape(np.size(dataorig,0),np.size(dataorig,1))
     return data
 
+#%% get permuted seq MNIST from seq MNIST
 
+def permutedseqMNIST(data):
+    seed = 0
+    tf.random.set_seed(seed)
+    np.random.seed(seed)
+    rng = np.random.RandomState(seed)
+    perm = rng.permutation(data.shape[1])
+    data = data[:, perm]
+    return data
 
 
 

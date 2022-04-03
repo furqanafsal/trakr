@@ -18,11 +18,16 @@ from modules import add_noise,standardize_data,cross_val_metrics_naiveB
 
 
 #%% load data
-path='/Users/furqanafzal/Documents/furqan/MountSinai/Research/ComputationalNeuro/erin_collab/variabledata'
+# path='/Users/furqanafzal/Documents/furqan/MountSinai/Research/ComputationalNeuro/erin_collab/variabledata'
+# os.chdir(path)
+
+
+path='/Users/furqanafzal/Documents/furqan/MountSinai/Research/ComputationalNeuro/trakr/neurips2022/data_results'
 os.chdir(path)
 
-X=np.load('mnist_trakr_X_alldigits.npy')
-X=standardize_data(X)
+X=np.load('permutedseqMNIST_alldigits.npy')
+# X=np.load('mnist_trakr_X_alldigits.npy')
+# X=standardize_data(X)
 y=np.load('mnist_trakr_labels_alldigits.npy')
 
 #%% performance and evaluation - metrics
@@ -39,7 +44,7 @@ performance_metrics['auc']=aucvec
 
 import pickle
 
-with open('/Users/furqanafzal/Documents/furqan/MountSinai/Research/ComputationalNeuro/trakr/neurips2022/data_results/metrics_nb_mnist', 'wb') as f:
+with open('/Users/furqanafzal/Documents/furqan/MountSinai/Research/ComputationalNeuro/trakr/neurips2022/data_results/metrics_nb_permutedmnist', 'wb') as f:
     pickle.dump(performance_metrics, f)
 
 

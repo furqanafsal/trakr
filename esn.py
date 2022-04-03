@@ -25,13 +25,22 @@ from modules import create_classifier,generateMNISTdata
 
 #%%
 
-path='/Users/furqanafzal/Documents/furqan/MountSinai/Research/ComputationalNeuro/erin_collab/variabledata'
+# path='/Users/furqanafzal/Documents/furqan/MountSinai/Research/ComputationalNeuro/erin_collab/variabledata'
+# os.chdir(path)
+# x_train=np.load('mnist_trakr_X_alldigits.npy')
+# y_train=np.load('mnist_trakr_labels_alldigits.npy')
+# x_train=zscore(x_train,axis=1)
+# x_test,y_test=generateMNISTdata()
+# x_test=zscore(x_test,axis=1)
+
+#%%
+
+path='/Users/furqanafzal/Documents/furqan/MountSinai/Research/ComputationalNeuro/trakr/neurips2022/data_results'
 os.chdir(path)
-x_train=np.load('mnist_trakr_X_alldigits.npy')
+
+x_train=np.load('permutedseqMNIST_alldigits.npy')
 y_train=np.load('mnist_trakr_labels_alldigits.npy')
-x_train=zscore(x_train,axis=1)
 x_test,y_test=generateMNISTdata()
-x_test=zscore(x_test,axis=1)
 
 #%%
 os.chdir('/Users/furqanafzal/Documents/furqan/MountSinai/Research/Code/trakr')
@@ -57,3 +66,23 @@ classifier = create_classifier('twiesn', input_shape, n_classes, path)
 
 #%%
 accuracy, aucvec=classifier.fit(x_train, y_train, x_test, y_test, y_true)
+
+#%%
+
+# accuracy=np.load('iclrrevised_acc_twiesn_mnist.npy')
+# aucvec=np.load('iclrrevised_auc_twiesn_mnist.npy')
+#%%
+performance_metrics=dict()
+performance_metrics['accuracy']=accuracy
+performance_metrics['auc']=aucvec
+
+#%%
+
+
+# import pickle
+
+# with open('/Users/furqanafzal/Documents/furqan/MountSinai/Research/ComputationalNeuro/trakr/neurips2022/data_results/metrics_twiesn_mnist', 'wb') as f:
+#     pickle.dump(performance_metrics, f)
+
+
+

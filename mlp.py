@@ -18,19 +18,30 @@ import tensorflow.keras as keras
 import tensorflow as tf
 import numpy as np
 import time
-from scipy.stats import zscore
 import matplotlib.pyplot as plt 
 from sklearn.model_selection import StratifiedKFold
 from sklearn.preprocessing import label_binarize
 from sklearn.metrics import roc_curve, auc
-from modules import generateMNISTdata
+from modules import generateMNISTdata,standardize_data
+from sklearn.metrics import accuracy_score
 
 #%%
-path='/Users/furqanafzal/Documents/furqan/MountSinai/Research/ComputationalNeuro/erin_collab/variabledata'
+# path='/Users/furqanafzal/Documents/furqan/MountSinai/Research/ComputationalNeuro/erin_collab/variabledata'
+# os.chdir(path)
+# x_train=np.load('mnist_trakr_X_alldigits.npy')
+# y_train=np.load('mnist_trakr_labels_alldigits.npy')
+# x_train=standardize_data(x_train)
+
+#%%
+
+path='/Users/furqanafzal/Documents/furqan/MountSinai/Research/ComputationalNeuro/trakr/neurips2022/data_results'
 os.chdir(path)
-x_train=np.load('mnist_trakr_X_alldigits.npy')
+
+x_train=np.load('permutedseqMNIST_alldigits.npy')
+
+# X=np.load('mnist_trakr_X_alldigits.npy')
+# X=standardize_data(X)
 y_train=np.load('mnist_trakr_labels_alldigits.npy')
-x_train=zscore(x_train,axis=1)
 
 #%% model init
 
@@ -60,7 +71,7 @@ model = keras.models.Model(inputs=input_layer, outputs=output_layer)
 
 #%% model fitting and eval
 
-skf = StratifiedKFold(n_splits=10)
+skf = StratifiedKFold(n_splits=10,shuffle=True)
 epochs=100
 accuracy=[]
 aucvec=[]
@@ -83,7 +94,7 @@ for train_idx, val_idx in skf.split(x_train, y_train):
     model.compile(
     optimizer="adam",
     loss="sparse_categorical_crossentropy",
-    metrics=["sparse_categorical_accuracy"],)
+    metrics=["accuracy"],)
     history = model.fit(
     X_train_cv,
     y_train_cv,
@@ -93,12 +104,26 @@ for train_idx, val_idx in skf.split(x_train, y_train):
     validation_data = (X_valid_cv, y_valid_cv),
     verbose=0)
     x_test,y_test=generateMNISTdata()
-    accuracy.append(model.evaluate(x_test, y_test)[1])
-    y_score=model.predict(x_test)
+    y_pred=model.predict(x_test)
     y_bin = label_binarize(y_test, classes=np.arange(0,n_classes))
+    accuracy.append(accuracy_score(np.argmax(y_bin,axis=1), np.argmax(y_pred,axis=1)))
+    # print('iteration')
     for i in range(n_classes):
-        fpr[i], tpr[i], _ = roc_curve(y_bin[:, i], y_score[:, i])
+        fpr[i], tpr[i], _ = roc_curve(y_bin[:, i], y_pred[:, i])
         roc_auc[i] = auc(fpr[i], tpr[i])
     aucvec.append(roc_auc)
+
+#%%
+
+performance_metrics=dict()
+performance_metrics['accuracy']=accuracy
+performance_metrics['auc']=aucvec
+
+#%%
+
+import pickle
+
+with open('/Users/furqanafzal/Documents/furqan/MountSinai/Research/ComputationalNeuro/trakr/neurips2022/data_results/metrics_mlp_permutedmnist', 'wb') as f:
+    pickle.dump(performance_metrics, f)
 
 

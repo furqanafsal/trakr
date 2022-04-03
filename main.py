@@ -15,39 +15,16 @@ import modules
 import importlib
 importlib.reload(modules) 
 from modules import dynamics,add_noise,train_test_loop,cross_val_metrics_trakr,standardize_data
-
-
-#%% Manipulate working directories
-path='/Users/furqanafzal/Documents/furqan/MountSinai/Research/ComputationalNeuro/erin_collab/variabledata'
-os.chdir(path)
-
-#%% load new MNIST digits
-
-# (X_arr, y_arr), (
-#     Xtest,
-#     ytest,
-# ) = tf.keras.datasets.mnist.load_data()
-
-# X=np.zeros((10,100,28,28))
-# y=np.zeros((10,100))
-# for i in range(10):
-#       tempx = X_arr[np.where((y_arr == i ))]
-#       tempy= y_arr[np.where((y_arr == i ))]
-#       ind = np.random.choice(np.size(tempx,0), size=100, replace=False)
-#       X[i,:,:,:]=tempx[ind,:]
-#       y[i,:]=tempy[ind]
-
-# x_train=X.reshape(1000,784)
-# y_train=y.reshape(1000)
+from modules import permutedseqMNIST
 
 #%% presaved MNIST train and test digits
+path='/Users/furqanafzal/Documents/furqan/MountSinai/Research/ComputationalNeuro/trakr/neurips2022/data_results'
+os.chdir(path)
 
-x_train=np.load('mnist_trakr_X_alldigits.npy')
+x_train=np.load('learningerror_permutedseqmnist.npy')
 y_train=np.load('mnist_trakr_labels_alldigits.npy')
-# x_test=np.load('mnist_trakr_Xtest_alldigits.npy')
-# y_test=np.load('mnist_trakr_ytest_alldigits.npy')
-# x_test=stats.zscore(x_test,axis=1)
-x_train=standardize_data(x_train)
+
+# x_train=standardize_data(x_train)
 
 #%% add noise to training digits optionally
 # sigma=1
@@ -62,15 +39,16 @@ tau=1 # tau
 delta = .3 # delta for Euler's method
 alpha=1 # alpha for regularizer
 totaltime=np.size(x_train,1)
+iterations=1
 learning_error_matrix=train_test_loop(iterations,x_train,N,N_out,g,tau,delta,alpha,totaltime)
-# np.save('learningerror_data.npy',learning_error_matrix) # save the learning error
+np.save('learningerror_permutedseqmnist.npy',learning_error_matrix)
 
 #%% load presaved learning error matrix
-path='/Users/furqanafzal/Documents/furqan/MountSinai/Research/ComputationalNeuro/erin_collab/variabledata'
-os.chdir(path)
+# path='/Users/furqanafzal/Documents/furqan/MountSinai/Research/ComputationalNeuro/erin_collab/variabledata'
+# os.chdir(path)
 
-x_train=np.load('mnist_trakr_learningerror_alldigits.npy')
-y_train=np.load('mnist_trakr_labels_alldigits.npy')
+# x_train=np.load('mnist_trakr_learningerror_alldigits.npy')
+# y_train=np.load('mnist_trakr_labels_alldigits.npy')
 
 
 #%% classification and evaluation - metrics
@@ -80,14 +58,14 @@ accuracy,aucvec=cross_val_metrics_trakr(x_train,y_train,n_classes=10, splits=10)
 #%%
 # performance_metrics={'accuracy-svm':accuracy,'auc-svm':aucvec}
 
-
+# performance_metrics=dict()
 performance_metrics['accuracy-knn']=accuracy
 performance_metrics['auc-knn']=aucvec
 
 #%%
 import pickle
 
-with open('/Users/furqanafzal/Documents/furqan/MountSinai/Research/ComputationalNeuro/trakr/neurips2022/data_results/metrics_trakr_mnist', 'wb') as f:
+with open('/Users/furqanafzal/Documents/furqan/MountSinai/Research/ComputationalNeuro/trakr/neurips2022/data_results/metrics_trakr_pseqmnist', 'wb') as f:
     pickle.dump(performance_metrics, f)
 
 #%%
@@ -96,12 +74,24 @@ with open('/Users/furqanafzal/Documents/furqan/MountSinai/Research/Computational
     loaded_dict = pickle.load(f)
 
 
+#%% get permuted sequential MNIST from seq MNIST
 
+# data=permutedseqMNIST(x_train)
 
+ #%%
+# c=1
+# for i in range(51,55):
 
+#     plt.subplot(5,1,c)
+#     plt.imshow(x_train[i].reshape(28, 28), cmap="gray")
+#     plt.axis("off")
+#     plt.title(f"Permuted sequence of the digit '{y_train[i]}' ")
+#     plt.show()
+#     c+=1
+    
 
-
-
+import numpy as np
+np.zeros((1,100))
 
 
 

@@ -7,56 +7,68 @@ Created on Thu Dec  2 11:05:11 2021
 """
 #%%modules
 import _ucrdtw
-import numpy as np
-import matplotlib.pyplot as plt
-import os 
-os.chdir('/Users/furqanafzal/Documents/furqan/MountSinai/Research/Code/trakr')
-import numpy as np
-import matplotlib.pylab as plt
-from IPython import get_ipython
-from sklearn.metrics import mean_squared_error
-from scipy import signal
-import pandas as pd
-from scipy.signal import sosfiltfilt
-from scipy.signal import savgol_filter
-from modules import dynamics,add_noise,train_test_loop,cross_val_metrics_trakr
-from sklearn import preprocessing
-from scipy import stats
-from sklearn.svm import LinearSVC
-from sklearn.svm import SVC
-from sklearn.preprocessing import label_binarize
-from sklearn.model_selection import cross_val_score
-from sklearn.model_selection import cross_validate
-from sklearn.model_selection import cross_val_predict
-from sklearn.metrics import roc_curve, auc
-from sklearn import svm, datasets
-from sklearn.model_selection import StratifiedKFold
-from sklearn.metrics import accuracy_score
-from modules import cross_val_metrics
-
-path='/Users/furqanafzal/Documents/furqan/MountSinai/Research/ComputationalNeuro/erin_collab/variabledata'
+import os
+path='/Users/furqanafzal/Documents/furqan/MountSinai/Research/Code/trakr'
 os.chdir(path)
+import numpy as np
+# import matplotlib.pylab as plt
+import modules
+import importlib
+importlib.reload(modules) 
+from modules import add_noise,standardize_data,cross_val_metrics
 
 #%% load data
-X=np.load('mnist_trakr_X_alldigits.npy')
-X=stats.zscore(X,axis=1)
+path='/Users/furqanafzal/Documents/furqan/MountSinai/Research/ComputationalNeuro/trakr/neurips2022/data_results'
+os.chdir(path)
+
+X=np.load('permutedseqMNIST_alldigits.npy')
+# X=standardize_data(X)
 y=np.load('mnist_trakr_labels_alldigits.npy')
 
 
 #%% performance and evaluation - metrics
-vec=[]
-vec2=[]
+
+# meanauc for window 5 is 0.5829566666666666
+# svm
+# meanauc for window 10 is 0.5866572222222222
+# svm
+# meanauc for window 20 is 0.5869033333333332
+# svm
+# meanauc for window 50 is 0.5846750000000001
+# svm
+# meanauc for window 100 is 0.5775111111111111
+# svm
+
+accuracymat=[]
+aucmat=[]
 for k in range(np.size(X,0)):
     distmat=[]
+    print(f'On iteration {k}')
     for i in range(np.size(X,0)):
-        loc, dist = _ucrdtw.ucrdtw(X[i,:], X[k,:] ,20, True)
+        loc, dist = _ucrdtw.ucrdtw(X[i,:], X[k,:] ,20, False)
         distmat.append(dist)
-        print(i)
+        # print(i)
     distmat=np.array(distmat).reshape(-1,1)
-    accuracy,aucvec=cross_val_metrics(distmat,y,n_classes=10)
-    vec.append(accuracy),vec2.append(aucvec)
+    accuracy,aucvec=cross_val_metrics(distmat,y,n_classes=10,splits=10)
+    accuracymat.append(accuracy),aucmat.append(aucvec)
 
+#%%
+# performance_metrics={'accuracy-svm':accuracy,'auc-svm':aucvec}
 
+# performance_metrics=dict()
+performance_metrics['accuracy-knn']=accuracymat
+performance_metrics['auc-knn']=aucmat
+
+#%%
+import pickle
+
+with open('/Users/furqanafzal/Documents/furqan/MountSinai/Research/ComputationalNeuro/trakr/neurips2022/data_results/metrics_dtw_permutedmnist', 'wb') as f:
+    pickle.dump(performance_metrics, f)
+
+#%%
+
+# with open('/Users/furqanafzal/Documents/furqan/MountSinai/Research/ComputationalNeuro/trakr/neurips2022/data_results/metrics_trakr_mnist', 'rb') as f:
+#     loaded_dict = pickle.load(f)
 
 
 
