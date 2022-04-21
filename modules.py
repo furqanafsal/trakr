@@ -18,7 +18,7 @@ import tensorflow as tf
 from scipy import stats
 from scipy import signal
 from scipy.signal import sosfiltfilt
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.linear_model import LogisticRegression
 import warnings
@@ -85,6 +85,40 @@ def train_test_loop(iterations,x_train,N,N_out,g,tau,delta,alpha,totaltime):
             # print(j)
     return learning_error_tot
 
+#%% train and test loop for trakr in the presence of noise, only training on select digits
+
+def train_test_loop_noisyinput(iterations,x_train,N,N_out,g,tau,delta,alpha,totaltime):
+    digits=[0,500,900]
+    learning_error_tot=np.zeros((len(digits),np.size(x_train,0),totaltime))
+    # digits=[0,100,200,300,400,500,600,700,800,900]
+    cnt=0
+    for i in digits: 
+        regP=alpha*np.identity(N) # regularizer
+        J = g*np.random.randn(N,N)/np.sqrt(N) # connectivity matrix J
+        r = np.zeros((N, totaltime)) # rate matrix - firing rates of neurons
+        x = np.random.randn(N, 1) # activity matrix before activation function applied
+        z_out = np.zeros((N_out,totaltime)) # z(t) for the output read out unit
+        error = np.zeros((N_out, totaltime)) # error signal- z(t)-f(t)
+        learning_error = np.zeros((N_out, totaltime)) # change in the learning error over time
+        w_out = np.random.randn(N, N_out)/np.sqrt(N) # output weights for the read out unit
+        w_in = np.random.randn(N, N_out) # input weights
+        f=x_train[i,:].reshape(1,-1)
+        # pdb.set_trace()
+        error,learning_error,z_out,w_out,x,regP=dynamics(iterations,N_out,N,g,tau,delta,f,
+                        totaltime,regP,J,r,x,z_out,error,learning_error,w_out,w_in,
+                        freezew=0,t1_train=0,
+                        t2_train=totaltime)
+        for j in range(np.size(x_train,0)):
+            f=x_train[j,:].reshape(1,-1)
+            error,learning_error,z_out,w_out,_,_=dynamics(1,N_out,N,g,tau,delta,f,
+                        totaltime,regP,J,r,x,z_out,error,learning_error,w_out,w_in,
+                        freezew=1,t1_train=0,
+                        t2_train=totaltime)
+            learning_error_tot[cnt,j,:]=learning_error
+        cnt+=1
+            # print(j)
+    return learning_error_tot
+
 #%% #%% train and test loop for trakr - when learning chaotic RNN unit trajectories - learning ...
 #%%      multiple units simultaneously - dev project
 
@@ -103,14 +137,14 @@ def train_test_loop_formultiunitactivity(x_train,N,N_out,g,tau,delta,alpha,total
         w_in = np.random.randn(N, N_out) # input weights
         f=x_train[:,:,i]
         # pdb.set_trace()
-        error,learning_error,z_out,w_out,x,regP=dynamics(N_out,N,g,tau,delta,f,
+        error,learning_error,z_out,w_out,x,regP=dynamics(1,N_out,N,g,tau,delta,f,
                         totaltime,regP,J,r,x,z_out,error,learning_error,w_out,w_in,
                         freezew=0,t1_train=0,
                         t2_train=totaltime)
-        print(i)
+        print(f'On iteration {i}')
         for j in range(np.size(x_train,2)):
             f=x_train[:,:,j]
-            error,learning_error,z_out,w_out,_,_=dynamics(N_out,N,g,tau,delta,f,
+            error,learning_error,z_out,w_out,_,_=dynamics(1,N_out,N,g,tau,delta,f,
                         totaltime,regP,J,r,x,z_out,error,learning_error,w_out,w_in,
                         freezew=1,t1_train=0,
                         t2_train=totaltime)
@@ -123,7 +157,7 @@ def train_test_loop_formultiunitactivity(x_train,N,N_out,g,tau,delta,alpha,total
 def cross_val_metrics_trakr(x,y,n_classes,splits):
     warnings.filterwarnings("ignore")
     skf = StratifiedKFold(n_splits=splits,shuffle=True)
-    print('knn')
+    # print('knn')
     accuracy=[]
     aucvec=[]
     fpr = dict()
@@ -138,8 +172,8 @@ def cross_val_metrics_trakr(x,y,n_classes,splits):
             # fit model
             
             # model = svm.SVC()
-            # model=LogisticRegression()
-            model = KNeighborsClassifier()
+            model=LogisticRegression()
+            # model = KNeighborsClassifier()
             model.fit(X_train, y_train)
             
             # evaluate model
@@ -151,7 +185,7 @@ def cross_val_metrics_trakr(x,y,n_classes,splits):
                 fpr[i], tpr[i], _ = roc_curve(bin_ytrue[:, i], bin_ypred[:, i])
                 roc_auc[i] = auc(fpr[i], tpr[i])
             aucvec.append(roc_auc)
-        print(f"Evaluating Metrics on Iteration - {k}")
+        # print(f"Evaluating Metrics on Iteration - {k}")
         # print(f"mean acc - {np.mean(accuracy)}")
         # print(f"mean auc - {np.mean(aucvec)}")
     return accuracy,aucvec
@@ -172,8 +206,8 @@ def cross_val_metrics(x,y,n_classes,splits):
         y_train, y_test = y[train_ix], y[test_ix]
         # fit model
         # model = svm.SVC()
-        # model=LogisticRegression()
-        model = KNeighborsClassifier()
+        model=LogisticRegression()
+        # model = KNeighborsClassifier()
         model.fit(X_train, y_train)
         # evaluate model
         y_pred=model.predict(X_test)
@@ -270,27 +304,73 @@ def visualize_training(iterations,f,N,N_out,g,tau,delta,alpha):
                     freezew=0,t1_train=0,
                     t2_train=totaltime)
     linewidth=2
-    time = np.linspace(0,totaltime/1000,totaltime).reshape(1,totaltime) # time vector
+    
+    # time = np.linspace(0,totaltime/1000,totaltime).reshape(1,totaltime) # time vector
+    # trial=10
+    # plt.subplot(311)
+    # plt.plot(time[0,:],f[trial,:],color="blue", linewidth=linewidth)
+    # #ax.plot(time[0,:],f_raw[channel,:]+2,color="cyan", linewidth=linewidth)
+    # plt.ylabel('Target \n function', fontsize=22)
+    # plt.xticks(fontsize=22)
+    # plt.yticks(fontsize=22)
+    # plt.ylim([-1.5,1.5])
 
+    # plt.subplot(312)
+    # plt.plot(time[0,:],z_out[trial,:],color="red", linewidth=linewidth)
+    # plt.ylabel('Output', fontsize=22)
+    # plt.xticks(fontsize=22)
+    # plt.yticks(fontsize=22)
+    # plt.ylim([-1.5,1.5])
+
+    # plt.subplot(313)
+    # plt.plot(time[0,:],learning_error[trial,:],color="green", linewidth=linewidth)
+    # plt.ylabel('Learning \n error', fontsize=22)
+    # plt.xticks(fontsize=22)
+    # plt.yticks(fontsize=22)
+    # plt.ylim([0,1])
+    
+    # plt.savefig("/Users/furqanafzal/Documents/furqan/MountSinai/Research/ComputationalNeuro/trakr/neurips2022/figs_drafts/fig1_snippets.svg")
+
+    # plt.show()
+    
+    ####################################
+    
     plt.subplot(311)
-    plt.plot(time[0,:],f[0,:],color="blue", linewidth=linewidth)
-    #ax.plot(time[0,:],f_raw[channel,:]+2,color="cyan", linewidth=linewidth)
-    plt.ylabel('Target \n function', fontsize=22)
-    plt.xticks(fontsize=22)
-    plt.yticks(fontsize=22)
+    plt.imshow(f[:,:],aspect='auto')
+    plt.colorbar()
+    # plt.ylabel('Facial Features \n [Original]', fontsize=24)
+    #plt.yticks(fontsize=24)
+    plt.tick_params(
+        axis='x',          # changes apply to the x-axis
+        which='both',      # both major and minor ticks are affected
+        bottom=False,      # ticks along the bottom edge are off
+        top=False,         # ticks along the top edge are off
+        labelbottom=False)
+    plt.clim(-1,1)
+    
+    
+    ax=plt.subplot(312)
+    plt.imshow(z_out[:,:],aspect='auto')
+    # plt.ylabel('RNN Output', fontsize=24)
+    #plt.xlabel('Time (s)', fontsize=24)
+    plt.colorbar()
+    plt.clim(-1,1)
+    plt.xticks(fontsize=24)
+    plt.tick_params(
+        axis='x',          # changes apply to the x-axis
+        which='both',      # both major and minor ticks are affected
+        bottom=False,      # ticks along the bottom edge are off
+        top=False,         # ticks along the top edge are off
+        labelbottom=False)
 
-    plt.subplot(312)
-    plt.plot(time[0,:],z_out[0,:],color="red", linewidth=linewidth)
-    plt.ylabel('Output', fontsize=22)
-    plt.xticks(fontsize=22)
-    plt.yticks(fontsize=22)
-
-    plt.subplot(313)
-    plt.plot(time[0,:],learning_error[0,:],color="green", linewidth=linewidth)
-    plt.ylabel('Learning \n error', fontsize=22)
-    plt.xticks(fontsize=22)
-    plt.yticks(fontsize=22)
-    plt.ylim([0,.005])
+    ax=plt.subplot(313)
+    plt.imshow(learning_error[:,:],aspect='auto')
+    # plt.ylabel('Learning Error', fontsize=24)
+    # plt.xlabel('Time (s)', fontsize=24)
+    plt.colorbar()
+    # plt.clim(0,.1)
+    # plt.xticks(fontsize=24)
+  
     return f,z_out,learning_error
 
 
@@ -335,11 +415,17 @@ def permutedseqMNIST(data):
     return data
 
 
-
-        
-    
-    
-
+def network_init(N,N_out,g,tau,delta,alpha,totaltime):
+    regP=alpha*np.identity(N) # regularizer
+    J = g*np.random.randn(N,N)/np.sqrt(N) # connectivity matrix J
+    r = np.zeros((N, totaltime)) # rate matrix - firing rates of neurons
+    x = np.random.randn(N, 1) # activity matrix before activation function applied
+    z_out = np.zeros((N_out,totaltime)) # z(t) for the output read out unit
+    error = np.zeros((N_out, totaltime)) # error signal- z(t)-f(t)
+    learning_error = np.zeros((N_out, totaltime)) # change in the learning error over time
+    w_out = np.random.randn(N, N_out)/np.sqrt(N) # output weights for the read out unit
+    w_in = np.random.randn(N, N_out) # input weights
+    return regP,J,r,x,z_out,error,learning_error,w_out,w_in  
     
     
     

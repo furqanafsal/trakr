@@ -25,12 +25,12 @@ amp=np.array([1,1,1])  # amplitude of synthetic signal
 freq=np.array([10,20,15]) # frequency array
 
 # target function
-f=np.concatenate((amp[0]*np.sin(2*np.pi* freq[0] * np.linspace(0, 1,totaltime/2)) , 
-                  amp[1]*np.sin(2*np.pi* freq[1] * np.linspace(0, 1, totaltime/2))
+f=np.concatenate((amp[0]*np.sin(2*np.pi* freq[0] * np.linspace(0, 1,np.int(totaltime/2))) , 
+                  amp[1]*np.sin(2*np.pi* freq[1] * np.linspace(0, 1, np.int(totaltime/2)))
                  )).reshape(1,totaltime) # target function
 
 N_out=1
-N=100 # number of neurons in the RNN
+N=500 # number of neurons in the RNN
 g=1.2 # gain
 tau=1 # tau
 delta = .1 # delta for Euler's method
@@ -51,9 +51,9 @@ w_in = np.random.randn(N, N_out) # input weights
 #train - realtime
 ## training on the second half of the signal only here, first half is like a test signal
     
-error,learning_error,z_out,w_out,x,regP=dynamics(N_out,N,g,tau,delta,f,
+error,learning_error,z_out,w_out,x,regP=dynamics(1,N_out,N,g,tau,delta,f,
                 totaltime,regP,J,r,x,z_out,error,learning_error,w_out,w_in,
-                freezew=0,t1_train=totaltime/2,
+                freezew=0,t1_train=0,
                 t2_train=totaltime)
 
 num=50

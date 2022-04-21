@@ -15,13 +15,14 @@ import modules
 import importlib
 importlib.reload(modules) 
 from modules import dynamics,add_noise,train_test_loop,cross_val_metrics_trakr,standardize_data
-from modules import permutedseqMNIST
+from modules import permutedseqMNIST,train_test_loop_noisyinput
+import pickle
 
 #%% presaved MNIST train and test digits
 path='/Users/furqanafzal/Documents/furqan/MountSinai/Research/ComputationalNeuro/trakr/neurips2022/data_results'
 os.chdir(path)
 
-x_train=np.load('learningerror_permutedseqmnist.npy')
+x_train=np.load('permutedseqMNIST_alldigits.npy')
 y_train=np.load('mnist_trakr_labels_alldigits.npy')
 
 # x_train=standardize_data(x_train)
@@ -63,10 +64,9 @@ performance_metrics['accuracy-knn']=accuracy
 performance_metrics['auc-knn']=aucvec
 
 #%%
-import pickle
 
-with open('/Users/furqanafzal/Documents/furqan/MountSinai/Research/ComputationalNeuro/trakr/neurips2022/data_results/metrics_trakr_pseqmnist', 'wb') as f:
-    pickle.dump(performance_metrics, f)
+with open('/Users/furqanafzal/Documents/furqan/MountSinai/Research/ComputationalNeuro/trakr/neurips2022/data_results/noisyinput_metrics_trakr_pseqmnist_noiselimitupto_2', 'wb') as f:
+    pickle.dump(metrics, f)
 
 #%%
 
@@ -89,9 +89,52 @@ with open('/Users/furqanafzal/Documents/furqan/MountSinai/Research/Computational
 #     plt.show()
 #     c+=1
     
+##################################################################################
 
-import numpy as np
-np.zeros((1,100))
+################################################################
+# Noisy Inputs
+################################################################
+
+#%%
+level=np.linspace(0,5,50)
+# level=[2]
+totaltime=784
+N=30 # number of neurons in the RNN
+N_out=1
+g=1.4 # gain
+tau=1 # tau
+delta = .3 # delta for Euler's method
+alpha=1 # alpha for regularizer
+totaltime=np.size(x_train,1)
+iterations=1
+metrics=dict()
+
+for loop in range(len(level)):
+    x_train=np.load('permutedseqMNIST_alldigits.npy')
+    sigma=level[loop]
+    x_train=add_noise(x_train,sigma)
+    learning_error_matrix=train_test_loop_noisyinput(iterations,x_train,N,N_out,g,tau,delta,alpha,totaltime)
+    accuracy,aucvec=cross_val_metrics_trakr(learning_error_matrix,y_train,n_classes=10, splits=10)
+    metrics[f'Noiselevel {level[loop]} - accuracy']=accuracy
+    metrics[f'Noiselevel {level[loop]} - auc']=aucvec
+    print(f'On Noiselevel {level[loop]}')
+
+with open('/Users/furqanafzal/Documents/furqan/MountSinai/Research/ComputationalNeuro/trakr/neurips2022/data_results/noisyinput_metrics_trakr_pseqmnist_noiselimitupto_5', 'wb') as f:
+    pickle.dump(metrics, f)
+
+#%%
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
