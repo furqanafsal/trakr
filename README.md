@@ -2,9 +2,9 @@
 
 This repo contains basic code to train, test and classify time series patterns using TRAKR.
 
-For details, see: TRAKR - A reservoir-based tool for fast and accurate classification of neural time-series patterns
+For details, see: Reservoir-based Tracking (TRAKR) For One-shot Classification Of Neural Time-series Patterns
 
-https://www.biorxiv.org/content/10.1101/2021.10.13.464288v1
+[https://www.biorxiv.org/content/10.1101/2021.10.13.464288v1](https://www.biorxiv.org/content/10.1101/2021.10.13.464288v3)
 
 ##
 
